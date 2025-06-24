@@ -165,7 +165,7 @@ const Awareness: React.FC = () => {
     }
 
     // Move to next question or show results
-    setTimeout(() => {
+    setTimeout(async () => {
       if (currentQuestionIndex < currentQuiz.length - 1) {
         setCurrentQuestionIndex(prev => prev + 1);
         setSelectedAnswer(null);
