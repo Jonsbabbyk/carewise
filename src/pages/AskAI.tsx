@@ -15,6 +15,7 @@ const AskAI: React.FC = () => {
   const [conversations, setConversations] = useState<AIConversation[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
+  const [hasGreeted, setHasGreeted] = useState(false);
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const conversationsEndRef = useRef<HTMLDivElement>(null);
 
@@ -23,8 +24,20 @@ const AskAI: React.FC = () => {
 
   useEffect(() => {
     announceToScreenReader('Ask AI page loaded. You can type or speak your health questions here.');
-    speak('Hello! I am your AI health companion. You can ask me any health-related questions by typing or using the voice button. How can I help you today?');
-  }, [announceToScreenReader, speak]);
+    
+    // Only greet once when the page loads
+    if (!hasGreeted) {
+      const greeting = "Hello! I'm your AI health companion. Ask me anything about health and wellness.";
+      setCurrentResponse(greeting);
+      speak(greeting);
+      setHasGreeted(true);
+      
+      // Clear the greeting after speaking
+      setTimeout(() => {
+        setCurrentResponse('');
+      }, 5000);
+    }
+  }, [announceToScreenReader, speak, hasGreeted]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new conversations are added
@@ -98,8 +111,8 @@ const AskAI: React.FC = () => {
         {/* Header */}
         <div className="text-center mb-8">
           <TavusAvatar 
-            message={currentResponse || "I'm ready to answer your health questions!"}
-            autoPlay={!!currentResponse}
+            message={currentResponse}
+            autoPlay={!!currentResponse && hasGreeted}
             className="mb-6"
           />
           <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-4">Ask Your AI Health Companion</h1>

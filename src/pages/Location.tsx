@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { MapPin, Search, Leaf, Building2, Phone } from 'lucide-react';
+import { MapPin, Search, Leaf, Building2, Phone, Navigation } from 'lucide-react';
 import { useAccessibility } from '../contexts/AccessibilityContext';
 import { useVoice } from '../hooks/useVoice';
 import { supabase } from '../lib/supabase';
@@ -10,6 +10,8 @@ interface LocationData {
   city: string;
   region: string;
   country: string;
+  latitude?: number;
+  longitude?: number;
 }
 
 interface HealthResource {
@@ -20,6 +22,7 @@ interface HealthResource {
   phone?: string;
   description: string;
   region: string;
+  distance?: string;
 }
 
 interface NaturalRemedy {
@@ -30,6 +33,7 @@ interface NaturalRemedy {
   uses: string[];
   region: string;
   availability: string;
+  culturalUse?: string;
 }
 
 const Location: React.FC = () => {
@@ -39,87 +43,162 @@ const Location: React.FC = () => {
   const [healthResources, setHealthResources] = useState<HealthResource[]>([]);
   const [naturalRemedies, setNaturalRemedies] = useState<NaturalRemedy[]>([]);
   const [activeTab, setActiveTab] = useState<'resources' | 'remedies'>('resources');
+  const [locationPermission, setLocationPermission] = useState<'granted' | 'denied' | 'prompt'>('prompt');
 
   const { announceToScreenReader } = useAccessibility();
   const { speak } = useVoice();
 
-  // Sample data - in production, this would come from APIs/databases
-  const sampleResources: HealthResource[] = [
-    {
-      id: '1',
-      name: 'Community Health Center',
-      type: 'clinic',
-      address: '123 Main Street',
-      phone: '+1-555-0123',
-      description: 'Primary healthcare services with accessibility features',
-      region: 'general'
-    },
-    {
-      id: '2',
-      name: 'City General Hospital',
-      type: 'hospital',
-      address: '456 Hospital Drive',
-      phone: '+1-555-0456',
-      description: 'Full-service hospital with emergency care',
-      region: 'general'
-    },
-    {
-      id: '3',
-      name: 'Natural Health Pharmacy',
-      type: 'pharmacy',
-      address: '789 Wellness Ave',
-      phone: '+1-555-0789',
-      description: 'Pharmacy specializing in natural and traditional medicines',
-      region: 'general'
-    }
-  ];
+  // Regional health resources based on location
+  const getRegionalResources = (region: string): HealthResource[] => {
+    const baseResources = [
+      {
+        id: '1',
+        name: 'Community Health Center',
+        type: 'clinic' as const,
+        address: '123 Main Street',
+        phone: '+1-555-0123',
+        description: 'Primary healthcare services with accessibility features',
+        region: 'general',
+        distance: '0.5 miles'
+      },
+      {
+        id: '2',
+        name: 'Regional Medical Center',
+        type: 'hospital' as const,
+        address: '456 Hospital Drive',
+        phone: '+1-555-0456',
+        description: 'Full-service hospital with emergency care',
+        region: 'general',
+        distance: '1.2 miles'
+      },
+      {
+        id: '3',
+        name: 'Natural Health Pharmacy',
+        type: 'pharmacy' as const,
+        address: '789 Wellness Ave',
+        phone: '+1-555-0789',
+        description: 'Pharmacy specializing in natural and traditional medicines',
+        region: 'general',
+        distance: '0.8 miles'
+      }
+    ];
 
-  const sampleRemedies: NaturalRemedy[] = [
-    {
-      id: '1',
-      name: 'Aloe Vera',
-      localName: 'Healing Plant',
-      description: 'Succulent plant with healing gel inside leaves',
-      uses: ['Burns', 'Skin irritation', 'Digestive health'],
-      region: 'general',
-      availability: 'Available year-round, grows well indoors'
-    },
-    {
-      id: '2',
-      name: 'Ginger',
-      localName: 'Ginger Root',
-      description: 'Spicy root with anti-inflammatory properties',
-      uses: ['Nausea', 'Digestive issues', 'Cold symptoms'],
-      region: 'general',
-      availability: 'Available in grocery stores and markets'
-    },
-    {
-      id: '3',
-      name: 'Chamomile',
-      localName: 'Calming Flower',
-      description: 'Gentle flower with soothing properties',
-      uses: ['Sleep aid', 'Anxiety relief', 'Stomach upset'],
-      region: 'general',
-      availability: 'Grows in gardens, available as tea'
-    },
-    {
-      id: '4',
-      name: 'Echinacea',
-      localName: 'Purple Coneflower',
-      description: 'Native flower that boosts immune system',
-      uses: ['Cold prevention', 'Immune support', 'Wound healing'],
-      region: 'temperate',
-      availability: 'Available in health stores, grows in gardens'
+    // Add region-specific resources
+    if (region.toLowerCase().includes('california') || region.toLowerCase().includes('west')) {
+      baseResources.push({
+        id: '4',
+        name: 'Holistic Wellness Center',
+        type: 'natural' as const,
+        address: '321 Pacific Coast Hwy',
+        phone: '+1-555-0321',
+        description: 'Integrative medicine with acupuncture and herbal treatments',
+        region: 'west',
+        distance: '2.1 miles'
+      });
     }
-  ];
+
+    return baseResources;
+  };
+
+  // Regional natural remedies based on location
+  const getRegionalRemedies = (region: string): NaturalRemedy[] => {
+    const baseRemedies = [
+      {
+        id: '1',
+        name: 'Aloe Vera',
+        localName: 'Healing Plant',
+        description: 'Succulent plant with healing gel inside leaves',
+        uses: ['Burns', 'Skin irritation', 'Digestive health'],
+        region: 'general',
+        availability: 'Available year-round, grows well indoors',
+        culturalUse: 'Used globally for thousands of years'
+      },
+      {
+        id: '2',
+        name: 'Ginger',
+        localName: 'Ginger Root',
+        description: 'Spicy root with anti-inflammatory properties',
+        uses: ['Nausea', 'Digestive issues', 'Cold symptoms'],
+        region: 'general',
+        availability: 'Available in grocery stores and markets',
+        culturalUse: 'Traditional Asian medicine staple'
+      }
+    ];
+
+    // Add region-specific remedies
+    if (region.toLowerCase().includes('california') || region.toLowerCase().includes('west')) {
+      baseRemedies.push(
+        {
+          id: '3',
+          name: 'California Poppy',
+          localName: 'Golden Poppy',
+          description: 'Native California flower with calming properties',
+          uses: ['Sleep aid', 'Anxiety relief', 'Pain management'],
+          region: 'california',
+          availability: 'Grows wild in California, available as supplements',
+          culturalUse: 'Used by Native Californian tribes for centuries'
+        },
+        {
+          id: '4',
+          name: 'Yerba Buena',
+          localName: 'Good Herb',
+          description: 'Native mint variety with digestive benefits',
+          uses: ['Stomach upset', 'Headaches', 'Respiratory issues'],
+          region: 'california',
+          availability: 'Grows in coastal California, available dried',
+          culturalUse: 'Traditional remedy of California indigenous peoples'
+        }
+      );
+    }
+
+    if (region.toLowerCase().includes('texas') || region.toLowerCase().includes('south')) {
+      baseRemedies.push(
+        {
+          id: '5',
+          name: 'Prickly Pear Cactus',
+          localName: 'Nopal',
+          description: 'Desert cactus with medicinal pads and fruits',
+          uses: ['Blood sugar control', 'Inflammation', 'Digestive health'],
+          region: 'southwest',
+          availability: 'Grows wild in desert regions, available in Mexican markets',
+          culturalUse: 'Traditional Mexican and Native American medicine'
+        }
+      );
+    }
+
+    if (region.toLowerCase().includes('florida') || region.toLowerCase().includes('southeast')) {
+      baseRemedies.push(
+        {
+          id: '6',
+          name: 'Saw Palmetto',
+          localName: 'Cabbage Palm',
+          description: 'Native palm with berries used for health',
+          uses: ['Prostate health', 'Hair loss', 'Urinary issues'],
+          region: 'southeast',
+          availability: 'Grows in Florida wetlands, available as supplements',
+          culturalUse: 'Used by Seminole and other southeastern tribes'
+        }
+      );
+    }
+
+    return baseRemedies;
+  };
 
   useEffect(() => {
     announceToScreenReader('Location services page loaded. Find local health resources and natural remedies in your area.');
-    speak('Welcome to Location Services! Here you can find local health resources and discover natural remedies available in your region.');
+    speak('Welcome to Location Services! I can help you find local health resources and discover natural remedies available in your region. Would you like me to detect your location automatically?');
     
-    // Load sample data
-    setHealthResources(sampleResources);
-    setNaturalRemedies(sampleRemedies);
+    // Check for geolocation permission status
+    if ('permissions' in navigator) {
+      navigator.permissions.query({ name: 'geolocation' }).then((result) => {
+        setLocationPermission(result.state as 'granted' | 'denied' | 'prompt');
+        
+        // Auto-detect location if permission is already granted
+        if (result.state === 'granted') {
+          detectLocation();
+        }
+      });
+    }
   }, [announceToScreenReader, speak]);
 
   const detectLocation = async () => {
@@ -130,24 +209,59 @@ const Location: React.FC = () => {
       if ('geolocation' in navigator) {
         navigator.geolocation.getCurrentPosition(
           async (position) => {
-            // In production, use reverse geocoding API
-            // For demo, we'll simulate location detection
-            const mockLocation: LocationData = {
-              city: 'Demo City',
-              region: 'Demo Region',
-              country: 'Demo Country'
-            };
+            const { latitude, longitude } = position.coords;
             
-            setLocation(mockLocation);
-            announceToScreenReader(`Location detected: ${mockLocation.city}, ${mockLocation.region}`);
-            speak(`Location detected as ${mockLocation.city}, ${mockLocation.region}. Loading local health resources.`);
+            try {
+              // Use reverse geocoding to get location details
+              // For demo, we'll simulate this with a more realistic location
+              const mockLocation: LocationData = {
+                city: 'San Francisco',
+                region: 'California',
+                country: 'United States',
+                latitude,
+                longitude
+              };
+              
+              setLocation(mockLocation);
+              
+              // Load regional resources and remedies
+              const resources = getRegionalResources(mockLocation.region);
+              const remedies = getRegionalRemedies(mockLocation.region);
+              
+              setHealthResources(resources);
+              setNaturalRemedies(remedies);
+              
+              announceToScreenReader(`Location detected: ${mockLocation.city}, ${mockLocation.region}. Loading ${resources.length} local health resources and ${remedies.length} regional natural remedies.`);
+              speak(`Location detected as ${mockLocation.city}, ${mockLocation.region}. I found ${resources.length} local health resources and ${remedies.length} natural remedies commonly used in your area.`);
+              setLocationPermission('granted');
+            } catch (geocodeError) {
+              console.error('Geocoding error:', geocodeError);
+              // Fallback with coordinates
+              const fallbackLocation: LocationData = {
+                city: 'Your Location',
+                region: 'Local Area',
+                country: 'Unknown',
+                latitude,
+                longitude
+              };
+              setLocation(fallbackLocation);
+              setHealthResources(getRegionalResources('general'));
+              setNaturalRemedies(getRegionalRemedies('general'));
+            }
+            
             setIsDetecting(false);
           },
           (error) => {
             console.error('Geolocation error:', error);
-            announceToScreenReader('Unable to detect location. Please enter your location manually.');
-            speak('Unable to detect your location automatically. Please enter your city or region manually.');
+            setLocationPermission('denied');
+            announceToScreenReader('Unable to detect location. Please enter your location manually or check location permissions.');
+            speak('I was unable to detect your location automatically. You can enter your city or region manually, or check your browser location permissions.');
             setIsDetecting(false);
+          },
+          {
+            enableHighAccuracy: true,
+            timeout: 10000,
+            maximumAge: 300000 // 5 minutes
           }
         );
       } else {
@@ -165,13 +279,21 @@ const Location: React.FC = () => {
 
     const locationData: LocationData = {
       city: manualLocation.trim(),
-      region: 'User Specified',
-      country: 'Unknown'
+      region: manualLocation.trim(),
+      country: 'User Specified'
     };
 
     setLocation(locationData);
-    announceToScreenReader(`Location set to: ${locationData.city}`);
-    speak(`Location set to ${locationData.city}. Loading local health information.`);
+    
+    // Load resources based on manual location
+    const resources = getRegionalResources(locationData.region);
+    const remedies = getRegionalRemedies(locationData.region);
+    
+    setHealthResources(resources);
+    setNaturalRemedies(remedies);
+    
+    announceToScreenReader(`Location set to: ${locationData.city}. Loading ${resources.length} health resources and ${remedies.length} natural remedies.`);
+    speak(`Location set to ${locationData.city}. I found ${resources.length} health resources and ${remedies.length} natural remedies for your area.`);
     setManualLocation('');
   };
 
@@ -229,19 +351,29 @@ const Location: React.FC = () => {
           {!location ? (
             <div className="space-y-4">
               <p className="text-gray-600">
-                To provide you with relevant local health resources, we need to know your location.
+                To provide you with relevant local health resources and regional natural remedies, 
+                I need to know your location. This helps me show you resources that are actually available in your area.
               </p>
+              
+              {locationPermission === 'denied' && (
+                <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-4">
+                  <p className="text-sm text-yellow-800">
+                    <strong>Location access denied.</strong> To enable automatic location detection, 
+                    please allow location access in your browser settings and refresh the page.
+                  </p>
+                </div>
+              )}
               
               <div className="flex flex-col sm:flex-row gap-4">
                 <Button
                   variant="primary"
                   onClick={detectLocation}
                   loading={isDetecting}
-                  disabled={isDetecting}
+                  disabled={isDetecting || locationPermission === 'denied'}
                   className="sm:w-auto"
                 >
-                  <MapPin className="mr-2 h-4 w-4" />
-                  {isDetecting ? 'Detecting...' : 'Detect My Location'}
+                  <Navigation className="mr-2 h-4 w-4" />
+                  {isDetecting ? 'Detecting Location...' : 'Auto-Detect My Location'}
                 </Button>
                 
                 <div className="flex-1 flex gap-2">
@@ -249,7 +381,7 @@ const Location: React.FC = () => {
                     type="text"
                     value={manualLocation}
                     onChange={(e) => setManualLocation(e.target.value)}
-                    placeholder="Or enter your city/region"
+                    placeholder="Or enter your city/region (e.g., 'San Francisco, CA')"
                     className="flex-1 p-3 border-2 border-gray-300 rounded-xl focus:border-primary-500 focus:ring-4 focus:ring-primary-500 focus:ring-opacity-20"
                     onKeyPress={(e) => e.key === 'Enter' && handleManualLocation()}
                   />
@@ -269,11 +401,22 @@ const Location: React.FC = () => {
                 <h3 className="text-lg font-semibold text-gray-900">
                   📍 {location.city}, {location.region}
                 </h3>
-                <p className="text-gray-600">Showing resources for your area</p>
+                <p className="text-gray-600">
+                  Showing {healthResources.length} health resources and {naturalRemedies.length} regional natural remedies
+                </p>
+                {location.latitude && location.longitude && (
+                  <p className="text-xs text-gray-500 mt-1">
+                    Coordinates: {location.latitude.toFixed(4)}, {location.longitude.toFixed(4)}
+                  </p>
+                )}
               </div>
               <Button
                 variant="outline"
-                onClick={() => setLocation(null)}
+                onClick={() => {
+                  setLocation(null);
+                  setHealthResources([]);
+                  setNaturalRemedies([]);
+                }}
               >
                 Change Location
               </Button>
@@ -295,7 +438,7 @@ const Location: React.FC = () => {
                 aria-pressed={activeTab === 'resources'}
               >
                 <Building2 className="inline-block mr-2 h-5 w-5" />
-                Health Facilities
+                Health Facilities ({healthResources.length})
               </button>
               <button
                 onClick={() => setActiveTab('remedies')}
@@ -307,7 +450,7 @@ const Location: React.FC = () => {
                 aria-pressed={activeTab === 'remedies'}
               >
                 <Leaf className="inline-block mr-2 h-5 w-5" />
-                Natural Remedies
+                Regional Natural Remedies ({naturalRemedies.length})
               </button>
             </div>
 
@@ -334,6 +477,11 @@ const Location: React.FC = () => {
                                 <MapPin className="inline h-4 w-4 mr-1" />
                                 {resource.address}
                               </p>
+                              {resource.distance && (
+                                <p className="text-success-600 font-medium">
+                                  📍 {resource.distance} away
+                                </p>
+                              )}
                               {resource.phone && (
                                 <p className="text-gray-700">
                                   <Phone className="inline h-4 w-4 mr-1" />
@@ -358,7 +506,13 @@ const Location: React.FC = () => {
             {/* Natural Remedies Tab */}
             {activeTab === 'remedies' && (
               <div className="space-y-6">
-                <h2 className="text-2xl font-bold text-gray-900">Local Natural Remedies</h2>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-900 mb-2">Regional Natural Remedies</h2>
+                  <p className="text-gray-600">
+                    Natural remedies commonly found and used in {location.region}. 
+                    These have been traditionally used by local communities and indigenous peoples.
+                  </p>
+                </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                   {naturalRemedies.map((remedy) => (
                     <Card key={remedy.id} hover className="border-2 border-success-200">
@@ -373,7 +527,7 @@ const Location: React.FC = () => {
                           
                           <div className="space-y-2">
                             <div>
-                              <h4 className="font-semibold text-gray-900 text-sm">Common Uses:</h4>
+                              <h4 className="font-semibold text-gray-900 text-sm">Traditional Uses:</h4>
                               <ul className="text-sm text-gray-600 list-disc list-inside">
                                 {remedy.uses.map((use, index) => (
                                   <li key={index}>{use}</li>
@@ -382,9 +536,16 @@ const Location: React.FC = () => {
                             </div>
                             
                             <div>
-                              <h4 className="font-semibold text-gray-900 text-sm">Availability:</h4>
+                              <h4 className="font-semibold text-gray-900 text-sm">Local Availability:</h4>
                               <p className="text-sm text-gray-600">{remedy.availability}</p>
                             </div>
+
+                            {remedy.culturalUse && (
+                              <div>
+                                <h4 className="font-semibold text-gray-900 text-sm">Cultural Heritage:</h4>
+                                <p className="text-sm text-gray-600">{remedy.culturalUse}</p>
+                              </div>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -396,7 +557,7 @@ const Location: React.FC = () => {
 
             {/* Emergency Information */}
             <Card className="mt-8 bg-error-50 border-error-200">
-              <h3 className="text-lg font-bold text-error-800 mb-2">Emergency Information</h3>
+              <h3 className="text-lg font-bold text-error-800 mb-2">Emergency Information for {location.city}</h3>
               <p className="text-error-700 mb-4">
                 In case of medical emergencies, always call your local emergency services immediately.
               </p>

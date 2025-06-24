@@ -28,6 +28,7 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
     highContrast: false,
     voiceEnabled: true,
     reducedMotion: false,
+    contrastMode: 'light',
   });
 
   useEffect(() => {
@@ -46,6 +47,12 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
     const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     if (prefersReducedMotion) {
       setSettings(prev => ({ ...prev, reducedMotion: true }));
+    }
+
+    // Check for system dark mode preference
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDarkMode && !savedSettings) {
+      setSettings(prev => ({ ...prev, contrastMode: 'high' }));
     }
   }, []);
 
@@ -67,11 +74,24 @@ export const AccessibilityProvider: React.FC<AccessibilityProviderProps> = ({ ch
     };
     root.style.fontSize = fontSizeMap[settings.fontSize];
 
-    // Apply high contrast
-    if (settings.highContrast) {
+    // Apply contrast mode
+    root.classList.remove('light-mode', 'medium-contrast', 'high-contrast');
+    
+    switch (settings.contrastMode) {
+      case 'light':
+        root.classList.add('light-mode');
+        break;
+      case 'medium':
+        root.classList.add('medium-contrast');
+        break;
+      case 'high':
+        root.classList.add('high-contrast');
+        break;
+    }
+
+    // Legacy high contrast support
+    if (settings.highContrast && settings.contrastMode === 'light') {
       root.classList.add('high-contrast');
-    } else {
-      root.classList.remove('high-contrast');
     }
 
     // Apply reduced motion

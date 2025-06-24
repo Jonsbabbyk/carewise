@@ -4,6 +4,7 @@ export interface AccessibilitySettings {
   highContrast: boolean;
   voiceEnabled: boolean;
   reducedMotion: boolean;
+  contrastMode: 'light' | 'medium' | 'high';
 }
 
 export interface AIConversation {
@@ -35,6 +36,7 @@ export interface GameState {
   items: Array<{
     id: string;
     type: 'healthy' | 'unhealthy';
+    emoji: string;
     position: { x: number; y: number };
     collected: boolean;
   }>;

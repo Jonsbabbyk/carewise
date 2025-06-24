@@ -1,5 +1,5 @@
 import React, { useEffect } from 'react';
-import { Settings as SettingsIcon, Eye, Brain, Type, Volume2, Palette } from 'lucide-react';
+import { Settings as SettingsIcon, Eye, Brain, Type, Volume2, Palette, Sun, Moon, Contrast } from 'lucide-react';
 import { useAccessibility } from '../contexts/AccessibilityContext';
 import { useVoice } from '../hooks/useVoice';
 import { supabase } from '../lib/supabase';
@@ -12,7 +12,7 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     announceToScreenReader('Accessibility Settings page loaded. Customize your experience here.');
-    speak('Welcome to Accessibility Settings. Here you can customize your experience with different accessibility modes, font sizes, and visual preferences.');
+    speak('Welcome to Accessibility Settings. Here you can customize your experience with different accessibility modes, font sizes, contrast options, and visual preferences.');
   }, [announceToScreenReader, speak]);
 
   const handleModeChange = async (mode: typeof settings.mode) => {
@@ -44,6 +44,24 @@ const Settings: React.FC = () => {
         user_id: 'anonymous-user',
         accessibility_mode: settings.mode,
         font_preference: fontSize,
+        voice_enabled: settings.voiceEnabled,
+      });
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+    }
+  };
+
+  const handleContrastModeChange = async (contrastMode: typeof settings.contrastMode) => {
+    updateSettings({ contrastMode });
+    announceToScreenReader(`Contrast mode changed to ${contrastMode} contrast`);
+    speak(`Switched to ${contrastMode} contrast mode`);
+    
+    // Save to Supabase
+    try {
+      await supabase.from('user_preferences').upsert({
+        user_id: 'anonymous-user',
+        accessibility_mode: settings.mode,
+        font_preference: settings.fontSize,
         voice_enabled: settings.voiceEnabled,
       });
     } catch (error) {
@@ -105,6 +123,30 @@ const Settings: React.FC = () => {
     { id: 'medium', name: 'Medium', description: '16px - Standard size' },
     { id: 'large', name: 'Large', description: '18px - Easier to read' },
     { id: 'extra-large', name: 'Extra Large', description: '20px - Maximum readability' }
+  ];
+
+  const contrastModes = [
+    {
+      id: 'light',
+      name: 'Light Mode',
+      description: 'Standard light background with dark text',
+      icon: Sun,
+      color: 'primary'
+    },
+    {
+      id: 'medium',
+      name: 'Medium Contrast',
+      description: 'Enhanced contrast for better visibility',
+      icon: Contrast,
+      color: 'warning'
+    },
+    {
+      id: 'high',
+      name: 'High Contrast (Dark)',
+      description: 'Dark background with high contrast text',
+      icon: Moon,
+      color: 'secondary'
+    }
   ];
 
   return (
@@ -175,6 +217,56 @@ const Settings: React.FC = () => {
             </div>
           </Card>
 
+          {/* Contrast Control */}
+          <Card>
+            <h2 className="text-2xl font-bold text-gray-900 mb-6">Visual Contrast</h2>
+            <p className="text-gray-600 mb-4">
+              Choose the contrast level that works best for your vision and environment.
+            </p>
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              {contrastModes.map((mode) => {
+                const Icon = mode.icon;
+                const isActive = settings.contrastMode === mode.id;
+                
+                return (
+                  <button
+                    key={mode.id}
+                    onClick={() => handleContrastModeChange(mode.id as typeof settings.contrastMode)}
+                    className={`p-6 rounded-xl border-2 text-center transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-offset-2 ${
+                      isActive
+                        ? `border-${mode.color}-500 bg-${mode.color}-50 focus:ring-${mode.color}-500`
+                        : 'border-gray-200 hover:border-gray-300 focus:ring-gray-500'
+                    }`}
+                    aria-pressed={isActive}
+                  >
+                    <div className={`w-12 h-12 rounded-lg flex items-center justify-center mx-auto mb-3 ${
+                      isActive ? `bg-${mode.color}-100` : 'bg-gray-100'
+                    }`}>
+                      <Icon className={`h-6 w-6 ${
+                        isActive ? `text-${mode.color}-600` : 'text-gray-600'
+                      }`} aria-hidden="true" />
+                    </div>
+                    <h3 className={`font-semibold mb-2 ${
+                      isActive ? `text-${mode.color}-900` : 'text-gray-900'
+                    }`}>
+                      {mode.name}
+                    </h3>
+                    <p className={`text-sm ${
+                      isActive ? `text-${mode.color}-700` : 'text-gray-600'
+                    }`}>
+                      {mode.description}
+                    </p>
+                    {isActive && (
+                      <div className="mt-3">
+                        <div className={`w-4 h-4 rounded-full bg-${mode.color}-500 mx-auto`}></div>
+                      </div>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </Card>
+
           {/* Font Size Settings */}
           <Card>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Font Size</h2>
@@ -218,15 +310,15 @@ const Settings: React.FC = () => {
           <Card>
             <h2 className="text-2xl font-bold text-gray-900 mb-6">Additional Settings</h2>
             <div className="space-y-6">
-              {/* High Contrast */}
+              {/* Legacy High Contrast Toggle (for backward compatibility) */}
               <div className="flex items-center justify-between p-4 bg-gray-50 rounded-xl">
                 <div className="flex items-center space-x-4">
                   <div className="w-12 h-12 bg-gray-200 rounded-lg flex items-center justify-center">
                     <Palette className="h-6 w-6 text-gray-600" aria-hidden="true" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-gray-900">High Contrast Mode</h3>
-                    <p className="text-sm text-gray-600">Increase contrast for better visibility</p>
+                    <h3 className="font-semibold text-gray-900">Legacy High Contrast</h3>
+                    <p className="text-sm text-gray-600">Override contrast mode with legacy high contrast</p>
                   </div>
                 </div>
                 <Button
@@ -293,12 +385,20 @@ const Settings: React.FC = () => {
                 <span className="ml-2 text-blue-700">{settings.fontSize}</span>
               </div>
               <div>
-                <span className="font-medium text-blue-800">High Contrast:</span>
-                <span className="ml-2 text-blue-700">{settings.highContrast ? 'Enabled' : 'Disabled'}</span>
+                <span className="font-medium text-blue-800">Contrast:</span>
+                <span className="ml-2 text-blue-700">{settings.contrastMode} contrast</span>
               </div>
               <div>
                 <span className="font-medium text-blue-800">Voice:</span>
                 <span className="ml-2 text-blue-700">{settings.voiceEnabled ? 'Enabled' : 'Disabled'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-800">Reduced Motion:</span>
+                <span className="ml-2 text-blue-700">{settings.reducedMotion ? 'Enabled' : 'Disabled'}</span>
+              </div>
+              <div>
+                <span className="font-medium text-blue-800">Legacy High Contrast:</span>
+                <span className="ml-2 text-blue-700">{settings.highContrast ? 'Enabled' : 'Disabled'}</span>
               </div>
             </div>
             <p className="text-xs text-blue-600 mt-4">
