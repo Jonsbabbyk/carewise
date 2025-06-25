@@ -15,6 +15,32 @@
   border: 0;
 }
 
+/* Accessibility Mode Classes */
+.visual-impairment-mode {
+  /* Enhanced for screen readers and voice navigation */
+}
+
+.visual-impairment-mode * {
+  outline: 2px solid #3B82F6 !important;
+  outline-offset: 2px;
+}
+
+.cognitive-support-mode {
+  /* Simplified interface with reduced complexity */
+}
+
+.cognitive-support-mode .animate-pulse,
+.cognitive-support-mode .animate-bounce,
+.cognitive-support-mode .animate-spin {
+  animation: none !important;
+}
+
+.dyslexia-friendly-mode {
+  font-family: 'OpenDyslexic', sans-serif !important;
+  letter-spacing: 0.1em;
+  line-height: 1.8;
+}
+
 /* Contrast Mode Styles */
 .light-mode {
   /* Default light mode - no changes needed */
@@ -158,4 +184,14 @@
 .high-contrast .bg-error-500 {
   --tw-bg-opacity: 1;
   background-color: rgb(239 68 68 / var(--tw-bg-opacity));
+}
+
+/* Animation classes */
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-fade-in {
+  animation: fadeIn 0.5s ease-in-out;
 }

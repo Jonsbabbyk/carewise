@@ -12,13 +12,46 @@ const Settings: React.FC = () => {
 
   useEffect(() => {
     announceToScreenReader('Accessibility Settings page loaded. Customize your experience here.');
-    speak('Welcome to Accessibility Settings. Here you can customize your experience with different accessibility modes, font sizes, contrast options, and visual preferences.');
+    
+    // Only speak the welcome message once when the page loads
+    const hasSpokenWelcome = sessionStorage.getItem('settings-welcome-spoken');
+    if (!hasSpokenWelcome) {
+      speak('Welcome to Accessibility Settings. Here you can customize your experience with different accessibility modes, font sizes, contrast options, and visual preferences.');
+      sessionStorage.setItem('settings-welcome-spoken', 'true');
+    }
   }, [announceToScreenReader, speak]);
 
   const handleModeChange = async (mode: typeof settings.mode) => {
     updateSettings({ mode });
     announceToScreenReader(`Accessibility mode changed to ${mode.replace('-', ' ')}`);
     speak(`Switched to ${mode.replace('-', ' ')} mode`);
+    
+    // Apply mode-specific changes immediately
+    const root = document.documentElement;
+    
+    // Reset all mode classes
+    root.classList.remove('visual-impairment-mode', 'cognitive-support-mode', 'dyslexia-friendly-mode');
+    
+    // Apply new mode
+    switch (mode) {
+      case 'visual-impairment':
+        root.classList.add('visual-impairment-mode');
+        // Enhanced screen reader support
+        updateSettings({ voiceEnabled: true });
+        break;
+      case 'cognitive-support':
+        root.classList.add('cognitive-support-mode');
+        // Simplified interface
+        updateSettings({ reducedMotion: true });
+        break;
+      case 'dyslexia-friendly':
+        root.classList.add('dyslexia-friendly-mode');
+        root.style.fontFamily = 'OpenDyslexic, sans-serif';
+        break;
+      default:
+        root.style.fontFamily = 'Inter, sans-serif';
+        break;
+    }
     
     // Save to Supabase
     try {

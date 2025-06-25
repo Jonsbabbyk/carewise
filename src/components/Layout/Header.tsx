@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Heart, Menu, Settings, Volume2, VolumeX } from 'lucide-react';
+import { Heart, Menu, Settings, Volume2, VolumeX, X } from 'lucide-react';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
 import { useVoice } from '../../hooks/useVoice';
 
@@ -34,6 +34,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMenuOpen }) => {
       '/mental-health': 'Mental Health & Emergency',
       '/medicine': 'Medicine Information',
       '/game': 'Sunshine Hero Game',
+      '/health-quest': 'Health Quest - Quiz Adventure',
     };
     return titleMap[path] || 'CareWise AI';
   };
@@ -110,7 +111,11 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMenuOpen }) => {
               aria-expanded={isMenuOpen}
               aria-controls="navigation-menu"
             >
-              <Menu className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+              {isMenuOpen ? (
+                <X className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+              ) : (
+                <Menu className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
+              )}
             </button>
           </div>
         </div>

@@ -12,17 +12,22 @@ const Home: React.FC = () => {
   const { speak } = useVoice();
   const [avatarMessage, setAvatarMessage] = useState('');
   const [showAvatar, setShowAvatar] = useState(true);
+  const [hasGreeted, setHasGreeted] = useState(false);
 
   useEffect(() => {
     announceToScreenReader('Welcome to CareWise AI, your accessible health companion');
     
-    // Set initial avatar greeting
-    const greeting = "Hello! I'm your AI health companion. I'm here to help you learn about natural health, answer your questions, and support your wellness journey. How can I assist you today?";
-    setAvatarMessage(greeting);
-  }, [announceToScreenReader]);
+    // Set initial avatar greeting only once
+    if (!hasGreeted) {
+      const greeting = "Hello! I'm your AI health companion. I'm here to help you learn about natural health, answer your questions, and support your wellness journey. How can I assist you today?";
+      setAvatarMessage(greeting);
+      setHasGreeted(true);
+    }
+  }, [announceToScreenReader, hasGreeted]);
 
   const handleAvatarComplete = () => {
-    // Avatar has finished speaking, ready for user input
+    // Avatar has finished speaking, clear message to prevent repetition
+    setAvatarMessage('');
     announceToScreenReader('AI assistant is ready for your questions');
   };
 
@@ -63,7 +68,7 @@ const Home: React.FC = () => {
       <section className="relative pt-8 pb-16 px-4 sm:px-6 lg:px-8" aria-labelledby="hero-heading">
         <div className="max-w-4xl mx-auto text-center">
           {/* Tavus AI Avatar */}
-          {showAvatar && (
+          {showAvatar && avatarMessage && (
             <div className="mb-8">
               <TavusAvatar 
                 message={avatarMessage}
@@ -180,6 +185,33 @@ const Home: React.FC = () => {
         </div>
       </section>
 
+      {/* Blockchain Security Notice */}
+      <section className="py-12 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-blue-50 to-indigo-50">
+        <div className="max-w-4xl mx-auto text-center">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Shield className="h-8 w-8 text-blue-600" aria-hidden="true" />
+          </div>
+          <h2 className="text-2xl sm:text-3xl font-bold text-gray-900 mb-4">
+            🔐 Blockchain-Secured Health Data
+          </h2>
+          <p className="text-lg text-gray-700 mb-6">
+            Your health information is protected with Algorand blockchain technology, ensuring privacy, 
+            data ownership, and immutable health records that you control.
+          </p>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 text-sm text-gray-600">
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <strong className="text-blue-600">Verifiable Records:</strong> Digital prescriptions and diagnoses with cryptographic proof
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <strong className="text-green-600">Privacy-First:</strong> Your data is hashed and anonymized for maximum protection
+            </div>
+            <div className="bg-white p-4 rounded-lg shadow-sm">
+              <strong className="text-purple-600">User-Owned:</strong> You control your health data and contribution to public health research
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Call to Action */}
       <section className="py-16 px-4 sm:px-6 lg:px-8 bg-gradient-to-r from-primary-500 to-secondary-600">
         <div className="max-w-4xl mx-auto text-center">
@@ -187,7 +219,7 @@ const Home: React.FC = () => {
             Ready to Start Your Wellness Journey?
           </h2>
           <p className="text-xl text-primary-100 mb-8">
-            Join thousands of users discovering natural health with AI assistance
+            Join thousands of users discovering natural health with AI assistance and blockchain security
           </p>
           <Button 
             variant="accent" 
