@@ -10,6 +10,7 @@ import {
   Pill, 
   Gamepad2,
   Trophy,
+  Shield,
   X
 } from 'lucide-react';
 import { useAccessibility } from '../../contexts/AccessibilityContext';
@@ -86,6 +87,13 @@ const Navigation: React.FC<NavigationProps> = ({ isOpen, onClose }) => {
       description: 'Quiz Adventure Game',
       icon: Trophy,
       color: 'success',
+    },
+    {
+      path: '/carechain-vault',
+      label: 'CareChain Vault',
+      description: 'Blockchain Health Identity',
+      icon: Shield,
+      color: 'secondary',
     },
   ];
 

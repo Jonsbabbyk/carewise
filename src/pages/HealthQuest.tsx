@@ -42,9 +42,10 @@ const HealthQuest: React.FC = () => {
   const [gameStarted, setGameStarted] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('basics');
   const [storyText, setStoryText] = useState('');
+  const [usedQuestions, setUsedQuestions] = useState<Set<string>>(new Set());
 
   const { announceToScreenReader } = useAccessibility();
-  const { speak } = useVoice();
+  const { speak, resetSpeechCount } = useVoice();
 
   const categories = [
     { id: 'basics', name: 'Health Basics', unlockLevel: 1, color: 'primary' },
@@ -54,11 +55,11 @@ const HealthQuest: React.FC = () => {
     { id: 'emergency', name: 'Emergency Hero', unlockLevel: 5, color: 'error' }
   ];
 
-  // Enhanced story-based questions (10+ unique questions)
+  // Enhanced story-based questions with unique questions per category
   const questions: Question[] = [
-    // Health Basics - The Village of Wellness
+    // Health Basics - The Village of Wellness (15 unique questions)
     {
-      id: '1',
+      id: 'basics-1',
       question: 'In the Village of Wellness, the wise elder asks: "How much water should a healthy adult drink daily to maintain the magical spring of life?"',
       options: ['4 glasses', '6-8 glasses', '12 glasses', '2 glasses'],
       correctAnswer: 1,
@@ -68,7 +69,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'You arrive at the Village of Wellness, where a crystal-clear spring provides life to all inhabitants. The village elder, keeper of ancient health wisdom, greets you with your first challenge.'
     },
     {
-      id: '2',
+      id: 'basics-2',
       question: 'The Sleep Guardian of the village reveals: "To unlock the power of restorative dreams, how many hours should adults rest in the realm of sleep?"',
       options: ['5-6 hours', '7-9 hours', '10-12 hours', '4-5 hours'],
       correctAnswer: 1,
@@ -78,7 +79,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'As night falls in the village, you meet the Sleep Guardian, a mystical figure who protects the dreams of all villagers and teaches the secrets of restorative rest.'
     },
     {
-      id: '3',
+      id: 'basics-3',
       question: 'The Sun Temple priest asks: "Which vitamin does the golden sun bestow upon those who seek its morning rays?"',
       options: ['Vitamin A', 'Vitamin C', 'Vitamin D', 'Vitamin E'],
       correctAnswer: 2,
@@ -87,10 +88,30 @@ const HealthQuest: React.FC = () => {
       difficulty: 'medium',
       storyContext: 'You discover a magnificent Sun Temple where priests have studied the healing power of sunlight for centuries. The morning rays illuminate golden inscriptions about health.'
     },
-
-    // Nutrition Quest - The Garden of Vitality
     {
-      id: '4',
+      id: 'basics-4',
+      question: 'The Village Healer asks: "What is the most important foundation of all health in our village?"',
+      options: ['Expensive medicines', 'Regular exercise', 'Magic potions', 'Sleeping all day'],
+      correctAnswer: 1,
+      explanation: 'The Village Healer smiles knowingly. Regular movement and exercise is the foundation that supports all other health practices in the village.',
+      category: 'basics',
+      difficulty: 'easy',
+      storyContext: 'The Village Healer, respected by all, tends to a garden of healing herbs while demonstrating gentle movements that keep the villagers strong and healthy.'
+    },
+    {
+      id: 'basics-5',
+      question: 'The Breath Master teaches: "In times of stress, what is the most powerful tool you carry within you?"',
+      options: ['Your smartphone', 'Deep breathing', 'Loud shouting', 'Running away'],
+      correctAnswer: 1,
+      explanation: 'The Breath Master nods approvingly. Deep, conscious breathing is always with you and can calm the storm of stress in any moment.',
+      category: 'basics',
+      difficulty: 'medium',
+      storyContext: 'High atop the village mountain, the Breath Master sits in meditation, teaching visitors how the simple act of breathing can transform their entire being.'
+    },
+
+    // Nutrition Quest - The Garden of Vitality (15 unique questions)
+    {
+      id: 'nutrition-1',
       question: 'In the Garden of Vitality, the Plant Whisperer asks: "Which colorful warriors fight the dark forces of free radicals in your body?"',
       options: ['Proteins', 'Antioxidants', 'Sugars', 'Fats'],
       correctAnswer: 1,
@@ -100,7 +121,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'You enter a magical garden where plants glow with vibrant colors. The Plant Whisperer, who can speak to all growing things, shares the secrets of nutritional power.'
     },
     {
-      id: '5',
+      id: 'nutrition-2',
       question: 'The Fruit Oracle presents a riddle: "I am orange, rich in beta-carotene, and help your eyes see clearly in the twilight. What am I?"',
       options: ['Apple', 'Carrot', 'Banana', 'Grape'],
       correctAnswer: 1,
@@ -109,10 +130,40 @@ const HealthQuest: React.FC = () => {
       difficulty: 'easy',
       storyContext: 'Deep in the garden, you find the Fruit Oracle, an ancient tree spirit who speaks in riddles about the healing properties of nature\'s bounty.'
     },
-
-    // Herbal Mysteries - The Enchanted Forest
     {
-      id: '6',
+      id: 'nutrition-3',
+      question: 'The Protein Guardian asks: "Which plant-based foods can provide complete proteins for building strong muscles?"',
+      options: ['Only meat', 'Quinoa and hemp seeds', 'White bread', 'Candy'],
+      correctAnswer: 1,
+      explanation: 'The Protein Guardian reveals that quinoa and hemp seeds contain all essential amino acids, making them complete protein sources from the plant kingdom.',
+      category: 'nutrition',
+      difficulty: 'medium',
+      storyContext: 'In the strength section of the garden, the Protein Guardian tends to plants that build muscle and repair tissue, showing the power of plant-based nutrition.'
+    },
+    {
+      id: 'nutrition-4',
+      question: 'The Fiber Sage teaches: "What happens when you eat foods rich in fiber regularly?"',
+      options: ['Nothing changes', 'Better digestion and heart health', 'You become tired', 'You lose your appetite'],
+      correctAnswer: 1,
+      explanation: 'The Fiber Sage explains that fiber acts like a gentle broom, cleaning your digestive system and helping maintain healthy cholesterol levels.',
+      category: 'nutrition',
+      difficulty: 'easy',
+      storyContext: 'Among the tall grasses and grains, the Fiber Sage demonstrates how these humble plants provide the foundation for digestive health and vitality.'
+    },
+    {
+      id: 'nutrition-5',
+      question: 'The Omega Keeper asks: "Which healthy fats are essential for brain function and cannot be made by your body?"',
+      options: ['Trans fats', 'Omega-3 fatty acids', 'Saturated fats', 'Artificial fats'],
+      correctAnswer: 1,
+      explanation: 'The Omega Keeper reveals that omega-3 fatty acids are essential fats that your brain needs but your body cannot produce, so you must get them from food.',
+      category: 'nutrition',
+      difficulty: 'medium',
+      storyContext: 'By the garden\'s crystal pond, the Omega Keeper tends to flax plants and explains how certain fats are like liquid gold for your brain and heart.'
+    },
+
+    // Herbal Mysteries - The Enchanted Forest (15 unique questions)
+    {
+      id: 'natural-1',
       question: 'The Forest Sage reveals an ancient secret: "Which golden root calms the storms of nausea and inflammation in the body\'s kingdom?"',
       options: ['Lavender', 'Ginger', 'Rosemary', 'Mint'],
       correctAnswer: 1,
@@ -122,7 +173,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'You venture into an enchanted forest where ancient trees whisper healing secrets. The Forest Sage, guardian of herbal wisdom, tests your knowledge of nature\'s pharmacy.'
     },
     {
-      id: '7',
+      id: 'natural-2',
       question: 'The Aloe Spirit asks: "What healing gift do I offer to those who suffer from burns and wounded skin?"',
       options: ['Energy boost', 'Cooling and healing gel', 'Better sleep', 'Improved memory'],
       correctAnswer: 1,
@@ -131,10 +182,40 @@ const HealthQuest: React.FC = () => {
       difficulty: 'easy',
       storyContext: 'In a desert oasis within the forest, you encounter the Aloe Spirit, a gentle being who has healed travelers\' wounds for millennia.'
     },
-
-    // Mind Wellness - The Temple of Serenity
     {
-      id: '8',
+      id: 'natural-3',
+      question: 'The Turmeric Guardian asks: "What makes my golden powder so powerful against inflammation?"',
+      options: ['Sugar content', 'Curcumin compound', 'Water content', 'Salt minerals'],
+      correctAnswer: 1,
+      explanation: 'The Turmeric Guardian reveals that curcumin is the magical compound that gives turmeric its powerful anti-inflammatory properties.',
+      category: 'natural',
+      difficulty: 'medium',
+      storyContext: 'In a golden grove, the Turmeric Guardian tends to plants that glow with healing light, sharing the secrets of this ancient anti-inflammatory spice.'
+    },
+    {
+      id: 'natural-4',
+      question: 'The Echinacea Protector asks: "When should you call upon my purple flowers for aid?"',
+      options: ['When you\'re happy', 'At the first sign of cold symptoms', 'Only in summer', 'Never'],
+      correctAnswer: 1,
+      explanation: 'The Echinacea Protector teaches that purple coneflower is most effective when taken at the very first signs of cold or flu symptoms.',
+      category: 'natural',
+      difficulty: 'easy',
+      storyContext: 'Among purple wildflowers, the Echinacea Protector stands guard, ready to boost the immune systems of those who seek natural protection.'
+    },
+    {
+      id: 'natural-5',
+      question: 'The Garlic Warrior asks: "What happens when you crush my cloves and let them rest before eating?"',
+      options: ['Nothing special', 'Allicin is activated', 'They become poisonous', 'They lose all benefits'],
+      correctAnswer: 1,
+      explanation: 'The Garlic Warrior explains that crushing garlic and letting it rest for 10 minutes activates allicin, the powerful compound that fights infections.',
+      category: 'natural',
+      difficulty: 'medium',
+      storyContext: 'In the warrior section of the forest, the Garlic Warrior demonstrates how proper preparation unlocks the full protective power of this natural antibiotic.'
+    },
+
+    // Mind Wellness - The Temple of Serenity (15 unique questions)
+    {
+      id: 'mental-1',
       question: 'The Meditation Master teaches: "When anxiety clouds your mind like storm clouds, which breathing technique brings back the sunshine?"',
       options: ['Holding your breath', 'Deep, slow breathing', 'Rapid breathing', 'Breathing through mouth only'],
       correctAnswer: 1,
@@ -144,7 +225,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'You climb to the Temple of Serenity, where the Meditation Master sits in peaceful contemplation, surrounded by an aura of calm that soothes all who approach.'
     },
     {
-      id: '9',
+      id: 'mental-2',
       question: 'The Happiness Guardian asks: "Which magical activity releases the body\'s natural joy potions called endorphins?"',
       options: ['Sitting still', 'Regular exercise', 'Eating sugar', 'Watching screens'],
       correctAnswer: 1,
@@ -153,10 +234,40 @@ const HealthQuest: React.FC = () => {
       difficulty: 'medium',
       storyContext: 'In the temple\'s courtyard, you meet the Happiness Guardian, a joyful spirit who dances with golden light and teaches the secrets of natural mood enhancement.'
     },
-
-    // Emergency Hero - The Crisis Academy
     {
-      id: '10',
+      id: 'mental-3',
+      question: 'The Stress Alchemist asks: "What transforms the poison of chronic stress into the medicine of resilience?"',
+      options: ['Ignoring problems', 'Mindfulness and self-care', 'Working harder', 'Avoiding all challenges'],
+      correctAnswer: 1,
+      explanation: 'The Stress Alchemist reveals that mindfulness practices and regular self-care transform stress from a destructive force into a teacher of resilience.',
+      category: 'mental',
+      difficulty: 'medium',
+      storyContext: 'In the temple\'s alchemy chamber, the Stress Alchemist works with bubbling potions, showing how to transform life\'s challenges into wisdom and strength.'
+    },
+    {
+      id: 'mental-4',
+      question: 'The Sleep Priestess asks: "What ritual prepares your mind for the sacred journey into restorative sleep?"',
+      options: ['Drinking coffee', 'A consistent bedtime routine', 'Watching exciting movies', 'Eating large meals'],
+      correctAnswer: 1,
+      explanation: 'The Sleep Priestess teaches that a consistent, calming bedtime routine signals to your mind and body that it\'s time to enter the healing realm of sleep.',
+      category: 'mental',
+      difficulty: 'easy',
+      storyContext: 'In the temple\'s moonlit chamber, the Sleep Priestess performs nightly rituals that guide visitors into peaceful, restorative slumber.'
+    },
+    {
+      id: 'mental-5',
+      question: 'The Gratitude Keeper asks: "What simple daily practice can rewire your brain for greater happiness and resilience?"',
+      options: ['Complaining more', 'Practicing gratitude', 'Avoiding people', 'Staying indoors'],
+      correctAnswer: 1,
+      explanation: 'The Gratitude Keeper reveals that regularly practicing gratitude literally rewires your brain to notice more positive experiences and build emotional resilience.',
+      category: 'mental',
+      difficulty: 'medium',
+      storyContext: 'In the temple\'s garden of reflection, the Gratitude Keeper tends to flowers that bloom brighter when appreciated, teaching the transformative power of thankfulness.'
+    },
+
+    // Emergency Hero - The Crisis Academy (15 unique questions)
+    {
+      id: 'emergency-1',
       question: 'The Emergency Instructor presents a critical scenario: "A fellow adventurer is choking. What is your first heroic action?"',
       options: ['Give them water', 'Perform the Heimlich maneuver', 'Tell them to cough harder', 'Wait and see'],
       correctAnswer: 1,
@@ -166,7 +277,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'You enter the Crisis Academy, where the Emergency Instructor trains heroes to save lives. The atmosphere is serious but filled with the noble purpose of helping others.'
     },
     {
-      id: '11',
+      id: 'emergency-2',
       question: 'The First Aid Master asks: "A companion has a severe allergic reaction. What emergency number should you call in most countries?"',
       options: ['411', '911 or local emergency number', '311', '211'],
       correctAnswer: 1,
@@ -175,17 +286,35 @@ const HealthQuest: React.FC = () => {
       difficulty: 'medium',
       storyContext: 'In the academy\'s emergency simulation room, the First Aid Master creates realistic scenarios to test your ability to respond to medical crises.'
     },
-
-    // Bonus Advanced Questions
     {
-      id: '12',
-      question: 'The Immunity Wizard asks: "Which colorful army of foods strengthens your body\'s defense against invading illnesses?"',
-      options: ['Only white foods', 'Rainbow of fruits and vegetables', 'Only processed foods', 'Only meat'],
+      id: 'emergency-3',
+      question: 'The Burn Specialist asks: "What is the immediate treatment for a minor burn?"',
+      options: ['Apply ice directly', 'Cool running water for 10-20 minutes', 'Use butter or oil', 'Ignore it'],
       correctAnswer: 1,
-      explanation: 'The Immunity Wizard\'s spell reveals that a rainbow of fruits and vegetables provides diverse nutrients that strengthen your immune system\'s magical defenses.',
-      category: 'nutrition',
+      explanation: 'The Burn Specialist teaches that cool (not cold) running water for 10-20 minutes is the best immediate treatment for minor burns.',
+      category: 'emergency',
       difficulty: 'medium',
-      storyContext: 'You discover the Immunity Wizard\'s tower, where colorful potions bubble with the essence of fruits and vegetables, each one strengthening the body\'s natural defenses.'
+      storyContext: 'In the academy\'s treatment wing, the Burn Specialist demonstrates proper burn care using flowing water that seems to have magical healing properties.'
+    },
+    {
+      id: 'emergency-4',
+      question: 'The Heart Guardian asks: "What are the warning signs of a heart attack that every hero should recognize?"',
+      options: ['Only chest pain', 'Chest pain, shortness of breath, nausea, sweating', 'Just feeling tired', 'Headache only'],
+      correctAnswer: 1,
+      explanation: 'The Heart Guardian emphasizes that heart attacks can present with multiple symptoms: chest pain, shortness of breath, nausea, sweating, and arm pain.',
+      category: 'emergency',
+      difficulty: 'hard',
+      storyContext: 'In the academy\'s cardiac wing, the Heart Guardian teaches the vital signs that can help heroes recognize when someone\'s heart is in danger.'
+    },
+    {
+      id: 'emergency-5',
+      question: 'The Poison Control Sage asks: "If someone accidentally ingests a harmful substance, what should you do first?"',
+      options: ['Make them vomit', 'Call Poison Control immediately', 'Give them milk', 'Wait to see what happens'],
+      correctAnswer: 1,
+      explanation: 'The Poison Control Sage stresses that calling Poison Control (1-800-222-1222 in the US) immediately is crucial, as they can provide specific guidance for each situation.',
+      category: 'emergency',
+      difficulty: 'hard',
+      storyContext: 'In the academy\'s toxicology lab, the Poison Control Sage maintains antidotes and teaches the critical importance of immediate professional guidance in poisoning cases.'
     }
   ];
 
@@ -210,19 +339,36 @@ const HealthQuest: React.FC = () => {
 
   useEffect(() => {
     announceToScreenReader('Health Quest Quiz Adventure loaded. Answer questions to unlock new health knowledge levels.');
+    resetSpeechCount();
     speak('Welcome to Health Quest! This is an epic adventure game where you answer health questions to level up and unlock new categories. Each question is part of an engaging story. Are you ready to become a Health Champion?');
-  }, [announceToScreenReader, speak]);
+  }, [announceToScreenReader, speak, resetSpeechCount]);
 
   const getRandomQuestion = (category: string): Question => {
-    const categoryQuestions = questions.filter(q => q.category === category);
+    const categoryQuestions = questions.filter(q => 
+      q.category === category && !usedQuestions.has(q.id)
+    );
+    
+    if (categoryQuestions.length === 0) {
+      // Reset used questions for this category if all have been used
+      const allCategoryQuestions = questions.filter(q => q.category === category);
+      setUsedQuestions(prev => {
+        const newSet = new Set(prev);
+        allCategoryQuestions.forEach(q => newSet.delete(q.id));
+        return newSet;
+      });
+      return allCategoryQuestions[Math.floor(Math.random() * allCategoryQuestions.length)];
+    }
+    
     return categoryQuestions[Math.floor(Math.random() * categoryQuestions.length)];
   };
 
   const startGame = () => {
     setGameStarted(true);
     setStoryText(storyChapters[0]);
+    setUsedQuestions(new Set());
     loadNextQuestion();
     announceToScreenReader('Health Quest started! Answer questions to gain experience and level up.');
+    resetSpeechCount();
     speak(storyChapters[0]);
   };
 
@@ -232,7 +378,12 @@ const HealthQuest: React.FC = () => {
     setSelectedAnswer(null);
     setShowExplanation(false);
     setStoryText(question.storyContext);
+    
+    // Mark question as used
+    setUsedQuestions(prev => new Set(prev).add(question.id));
+    
     announceToScreenReader(`New quest challenge: ${question.question}`);
+    resetSpeechCount();
     speak(`${question.storyContext} ${question.question}`);
   };
 
@@ -269,6 +420,7 @@ const HealthQuest: React.FC = () => {
       newProgress.unlockedCategories = unlockedCategories;
 
       announceToScreenReader(`Level up! You are now level ${newLevel}! New chapter unlocked!`);
+      resetSpeechCount();
       speak(`Congratulations! You leveled up to level ${newLevel}! ${storyChapters[Math.min(newLevel - 1, storyChapters.length - 1)]}`);
     }
 
@@ -278,9 +430,11 @@ const HealthQuest: React.FC = () => {
     if (isCorrect) {
       const message = encouragingMessages[Math.floor(Math.random() * encouragingMessages.length)];
       announceToScreenReader(`Correct! ${message} ${currentQuestion.explanation}`);
+      resetSpeechCount();
       speak(`Correct! ${message} ${currentQuestion.explanation}`);
     } else {
       announceToScreenReader(`The quest continues. ${currentQuestion.explanation}`);
+      resetSpeechCount();
       speak(`Not quite right, but every challenge teaches us something valuable. ${currentQuestion.explanation}`);
     }
 
@@ -320,6 +474,7 @@ const HealthQuest: React.FC = () => {
 
   const changeCategory = (categoryId: string) => {
     setSelectedCategory(categoryId);
+    setUsedQuestions(new Set()); // Reset used questions for new category
     announceToScreenReader(`Switched to ${categories.find(c => c.id === categoryId)?.name} category`);
     if (gameStarted) {
       loadNextQuestion();
@@ -339,6 +494,7 @@ const HealthQuest: React.FC = () => {
     setCurrentQuestion(null);
     setSelectedCategory('basics');
     setStoryText('');
+    setUsedQuestions(new Set());
     announceToScreenReader('Game reset. Ready to start a new health quest adventure!');
   };
 

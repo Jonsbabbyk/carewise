@@ -13,6 +13,7 @@ import Location from './pages/Location';
 import MentalHealth from './pages/MentalHealth';
 import Medicine from './pages/Medicine';
 import HealthQuest from './pages/HealthQuest';
+import CareChainVault from './pages/CareChainVault';
 
 function App() {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
@@ -41,6 +42,7 @@ function App() {
                 <Route path="/medicine" element={<Medicine />} />
                 <Route path="/game" element={<Game />} />
                 <Route path="/health-quest" element={<HealthQuest />} />
+                <Route path="/carechain-vault" element={<CareChainVault />} />
               </Routes>
             </div>
           </div>

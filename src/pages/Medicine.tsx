@@ -22,12 +22,13 @@ const Medicine: React.FC = () => {
   const [currentResponse, setCurrentResponse] = useState('');
 
   const { announceToScreenReader } = useAccessibility();
-  const { speak } = useVoice();
+  const { speak, resetSpeechCount } = useVoice();
 
   useEffect(() => {
     announceToScreenReader('Medicine Information page loaded. Ask questions about medications and get natural alternatives.');
+    resetSpeechCount();
     speak('Welcome to Medicine Information! You can ask questions about medications, dosages, interactions, and natural alternatives. How can I help you today?');
-  }, [announceToScreenReader, speak]);
+  }, [announceToScreenReader, speak, resetSpeechCount]);
 
   const commonQuestions = [
     {
@@ -80,6 +81,7 @@ const Medicine: React.FC = () => {
       
       // Announce and speak the response
       announceToScreenReader('Medicine information received');
+      resetSpeechCount();
       setTimeout(() => {
         AIServices.generateSpeech(aiAnswer).catch(() => speak(aiAnswer));
       }, 500);
@@ -125,12 +127,18 @@ const Medicine: React.FC = () => {
           <div className="lg:col-span-2 space-y-6">
             {/* AI Avatar Response */}
             {currentResponse && (
-              <Card>
-                <TavusAvatar 
-                  message={currentResponse}
-                  autoPlay={true}
-                  className="mb-4"
-                />
+              <Card className="bg-blue-50 border-blue-200">
+                <div className="flex items-start space-x-4">
+                  <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center flex-shrink-0">
+                    <Pill className="w-6 h-6 text-blue-600" aria-hidden="true" />
+                  </div>
+                  <div className="flex-1">
+                    <h3 className="text-lg font-bold text-blue-900 mb-2">AI Medicine Information</h3>
+                    <div className="bg-white rounded-lg p-4 border border-blue-200">
+                      <p className="text-gray-800 leading-relaxed">{currentResponse}</p>
+                    </div>
+                  </div>
+                </div>
               </Card>
             )}
 

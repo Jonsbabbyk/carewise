@@ -40,7 +40,7 @@ const Awareness: React.FC = () => {
   const [hasSpokenWelcome, setHasSpokenWelcome] = useState(false);
 
   const { announceToScreenReader } = useAccessibility();
-  const { speak } = useVoice();
+  const { speak, resetSpeechCount } = useVoice();
 
   // Expanded natural remedies (10+ unique remedies)
   const healthLessons: HealthLesson[] = [
@@ -162,7 +162,7 @@ const Awareness: React.FC = () => {
         id: `${lesson.id}-q1`,
         question: `What is the main active compound in ${lesson.remedy}?`,
         options: [
-          lesson.id === 'turmeric' ? 'Curcumin' : lesson.id === 'ginger' ? 'Gingerol' : lesson.id === 'garlic' ? 'Allicin' : 'Vitamin D',
+          lesson.id === 'turmeric' ? 'Curcumin' : lesson.id === 'ginger' ? 'Gingerol' : lesson.id === 'garlic' ? 'Allicin' : lesson.id === 'sunlight' ? 'Vitamin D' : lesson.id === 'echinacea' ? 'Alkamides' : 'Active compounds',
           'Caffeine',
           'Sugar',
           'Salt'
@@ -221,14 +221,16 @@ const Awareness: React.FC = () => {
     
     // Only speak welcome message once per session
     if (!hasSpokenWelcome) {
+      resetSpeechCount();
       speak('Welcome to Natural Health Awareness! Here you can learn about 10 unique natural remedies with detailed information and quizzes. Each remedy includes AI-powered educational content. Which topic would you like to explore?');
       setHasSpokenWelcome(true);
     }
-  }, [announceToScreenReader, speak, hasSpokenWelcome]);
+  }, [announceToScreenReader, speak, hasSpokenWelcome, resetSpeechCount]);
 
   const startLesson = (lesson: HealthLesson) => {
     setSelectedLesson(lesson);
     setIsPlayingLesson(true);
+    resetSpeechCount();
     announceToScreenReader(`Starting lesson: ${lesson.title}`);
     
     // Generate and play lesson content with AI response
@@ -248,6 +250,7 @@ const Awareness: React.FC = () => {
     setShowQuizResults(false);
     setIsPlayingLesson(false);
     
+    resetSpeechCount();
     announceToScreenReader(`Starting quiz for ${selectedLesson.title}. Question 1 of ${quiz.length}`);
     speak(quiz[0].question);
   };
@@ -279,12 +282,14 @@ const Awareness: React.FC = () => {
         setSelectedAnswer(null);
         const nextQuestion = currentQuiz[currentQuestionIndex + 1];
         announceToScreenReader(`Question ${currentQuestionIndex + 2} of ${currentQuiz.length}`);
+        resetSpeechCount();
         speak(nextQuestion.question);
       } else {
         // Quiz complete
         setShowQuizResults(true);
         const finalScore = isCorrect ? quizScore + 1 : quizScore;
         announceToScreenReader(`Quiz complete! You scored ${finalScore} out of ${currentQuiz.length}`);
+        resetSpeechCount();
         speak(`Congratulations! You completed the quiz with a score of ${finalScore} out of ${currentQuiz.length}. Great job learning about natural health!`);
         
         // Store quiz completion on blockchain
@@ -332,6 +337,7 @@ const Awareness: React.FC = () => {
     setQuizScore(0);
     setShowQuizResults(false);
     setIsPlayingLesson(false);
+    resetSpeechCount();
     announceToScreenReader('Returned to lesson selection');
   };
 

@@ -13,17 +13,19 @@ const Home: React.FC = () => {
   const [avatarMessage, setAvatarMessage] = useState('');
   const [showAvatar, setShowAvatar] = useState(true);
   const [hasGreeted, setHasGreeted] = useState(false);
+  const [speechCount, setSpeechCount] = useState(0);
 
   useEffect(() => {
     announceToScreenReader('Welcome to CareWise AI, your accessible health companion');
     
     // Set initial avatar greeting only once
-    if (!hasGreeted) {
+    if (!hasGreeted && speechCount < 2) {
       const greeting = "Hello! I'm your AI health companion. I'm here to help you learn about natural health, answer your questions, and support your wellness journey. How can I assist you today?";
       setAvatarMessage(greeting);
       setHasGreeted(true);
+      setSpeechCount(prev => prev + 1);
     }
-  }, [announceToScreenReader, hasGreeted]);
+  }, [announceToScreenReader, hasGreeted, speechCount]);
 
   const handleAvatarComplete = () => {
     // Avatar has finished speaking, clear message to prevent repetition
@@ -68,7 +70,7 @@ const Home: React.FC = () => {
       <section className="relative pt-8 pb-16 px-4 sm:px-6 lg:px-8" aria-labelledby="hero-heading">
         <div className="max-w-4xl mx-auto text-center">
           {/* Tavus AI Avatar */}
-          {showAvatar && avatarMessage && (
+          {showAvatar && avatarMessage && speechCount < 2 && (
             <div className="mb-8">
               <TavusAvatar 
                 message={avatarMessage}
@@ -94,23 +96,23 @@ const Home: React.FC = () => {
           </p>
 
           <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
-            <Button 
-              variant="primary" 
-              size="large"
-              as={Link}
-              to="/ask-ai"
-              className="shadow-2xl"
-            >
-              Ask AI Doctor <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
-            </Button>
-            <Button 
-              variant="outline" 
-              size="large"
-              as={Link}
-              to="/settings"
-            >
-              Accessibility Settings
-            </Button>
+            <Link to="/ask-ai">
+              <Button 
+                variant="primary" 
+                size="large"
+                className="shadow-2xl"
+              >
+                Ask AI Doctor <ArrowRight className="ml-2 h-5 w-5" aria-hidden="true" />
+              </Button>
+            </Link>
+            <Link to="/settings">
+              <Button 
+                variant="outline" 
+                size="large"
+              >
+                Accessibility Settings
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -126,24 +128,23 @@ const Home: React.FC = () => {
             {features.map((feature, index) => {
               const Icon = feature.icon;
               return (
-                <Card 
-                  key={feature.title}
-                  hover
-                  clickable
-                  onClick={() => window.location.href = feature.link}
-                  className={`border-2 border-${feature.color}-200 hover:border-${feature.color}-400 transition-all duration-200`}
-                >
-                  <div className={`w-12 h-12 bg-${feature.color}-100 rounded-xl flex items-center justify-center mb-4`}>
-                    <Icon className={`h-6 w-6 text-${feature.color}-600`} aria-hidden="true" />
-                  </div>
-                  <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
-                  <p className="text-gray-600 leading-relaxed">{feature.description}</p>
-                  <div className="mt-4">
-                    <span className={`text-${feature.color}-600 font-semibold flex items-center text-sm`}>
-                      Learn More <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
-                    </span>
-                  </div>
-                </Card>
+                <Link key={feature.title} to={feature.link}>
+                  <Card 
+                    hover
+                    className={`border-2 border-${feature.color}-200 hover:border-${feature.color}-400 transition-all duration-200 h-full`}
+                  >
+                    <div className={`w-12 h-12 bg-${feature.color}-100 rounded-xl flex items-center justify-center mb-4`}>
+                      <Icon className={`h-6 w-6 text-${feature.color}-600`} aria-hidden="true" />
+                    </div>
+                    <h3 className="text-xl font-bold text-gray-900 mb-3">{feature.title}</h3>
+                    <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                    <div className="mt-4">
+                      <span className={`text-${feature.color}-600 font-semibold flex items-center text-sm`}>
+                        Learn More <ArrowRight className="ml-1 h-4 w-4" aria-hidden="true" />
+                      </span>
+                    </div>
+                  </Card>
+                </Link>
               );
             })}
           </div>
@@ -221,15 +222,15 @@ const Home: React.FC = () => {
           <p className="text-xl text-primary-100 mb-8">
             Join thousands of users discovering natural health with AI assistance and blockchain security
           </p>
-          <Button 
-            variant="accent" 
-            size="extra-large"
-            as={Link}
-            to="/ask-ai"
-            className="shadow-2xl"
-          >
-            Get Started Now
-          </Button>
+          <Link to="/ask-ai">
+            <Button 
+              variant="accent" 
+              size="extra-large"
+              className="shadow-2xl"
+            >
+              Get Started Now
+            </Button>
+          </Link>
         </div>
       </section>
 

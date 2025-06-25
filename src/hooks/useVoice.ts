@@ -4,10 +4,22 @@ import { useAccessibility } from '../contexts/AccessibilityContext';
 export const useVoice = () => {
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [speechCount, setSpeechCount] = useState(0);
   const { settings } = useAccessibility();
 
-  const speak = useCallback((text: string) => {
+  const speak = useCallback((text: string, resetCount: boolean = false) => {
     if (!settings.voiceEnabled || !window.speechSynthesis) return;
+
+    // Reset count if requested or if it's a new session
+    if (resetCount) {
+      setSpeechCount(0);
+    }
+
+    // Limit to 2 speech outputs per prompt
+    if (speechCount >= 2) {
+      console.log('Speech limit reached for this prompt');
+      return;
+    }
 
     // Cancel any ongoing speech
     window.speechSynthesis.cancel();
@@ -17,12 +29,19 @@ export const useVoice = () => {
     utterance.pitch = 1;
     utterance.volume = 0.8;
 
-    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onstart = () => {
+      setIsSpeaking(true);
+      setSpeechCount(prev => prev + 1);
+    };
     utterance.onend = () => setIsSpeaking(false);
     utterance.onerror = () => setIsSpeaking(false);
 
     window.speechSynthesis.speak(utterance);
-  }, [settings.voiceEnabled]);
+  }, [settings.voiceEnabled, speechCount]);
+
+  const resetSpeechCount = useCallback(() => {
+    setSpeechCount(0);
+  }, []);
 
   const startListening = useCallback((): Promise<string> => {
     return new Promise((resolve, reject) => {
@@ -66,8 +85,10 @@ export const useVoice = () => {
     speak,
     startListening,
     stopSpeaking,
+    resetSpeechCount,
     isListening,
     isSpeaking,
+    speechCount,
     isSupported: 'speechSynthesis' in window && ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window),
   };
 };
