@@ -20,15 +20,21 @@ const Medicine: React.FC = () => {
   const [queries, setQueries] = useState<MedicineQuery[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   const [currentResponse, setCurrentResponse] = useState('');
+  const [hasSpokenWelcome, setHasSpokenWelcome] = useState(false);
 
   const { announceToScreenReader } = useAccessibility();
   const { speak, resetSpeechCount } = useVoice();
 
   useEffect(() => {
     announceToScreenReader('Medicine Information page loaded. Ask questions about medications and get natural alternatives.');
-    resetSpeechCount();
-    speak('Welcome to Medicine Information! You can ask questions about medications, dosages, interactions, and natural alternatives. How can I help you today?');
-  }, [announceToScreenReader, speak, resetSpeechCount]);
+    
+    // Welcome message - only speak once per session
+    if (!hasSpokenWelcome) {
+      resetSpeechCount();
+      speak('Welcome to Medicine Information! You can ask questions about medications, dosages, interactions, and natural alternatives. I will speak the full answer aloud to help with accessibility. How can I help you today?');
+      setHasSpokenWelcome(true);
+    }
+  }, [announceToScreenReader, speak, resetSpeechCount, hasSpokenWelcome]);
 
   const commonQuestions = [
     {
@@ -79,10 +85,11 @@ const Medicine: React.FC = () => {
 
       setQueries(prev => [...prev, newQuery]);
       
-      // Announce and speak the response
-      announceToScreenReader('Medicine information received');
+      // Announce and speak the FULL response for accessibility
+      announceToScreenReader('Medicine information received. Speaking full response aloud.');
       resetSpeechCount();
       setTimeout(() => {
+        // Speak the full answer aloud for accessibility
         AIServices.generateSpeech(aiAnswer).catch(() => speak(aiAnswer));
       }, 500);
 
@@ -199,10 +206,10 @@ const Medicine: React.FC = () => {
               ) : (
                 queries.map((query) => (
                   <div key={query.id} className="space-y-4">
-                    {/* User Question */}
+                    {/* User Question - Fixed text visibility */}
                     <div className="flex justify-end">
                       <Card className="max-w-sm bg-secondary-500 text-white">
-                        <p className="font-medium">{query.question}</p>
+                        <p className="font-medium text-white">{query.question}</p>
                         <span className="text-xs text-secondary-100 mt-2 block">
                           {query.timestamp.toLocaleTimeString()}
                         </span>

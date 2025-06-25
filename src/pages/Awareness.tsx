@@ -38,6 +38,7 @@ const Awareness: React.FC = () => {
   const [showQuizResults, setShowQuizResults] = useState(false);
   const [isPlayingLesson, setIsPlayingLesson] = useState(false);
   const [hasSpokenWelcome, setHasSpokenWelcome] = useState(false);
+  const [showQuiz, setShowQuiz] = useState(false);
 
   const { announceToScreenReader } = useAccessibility();
   const { speak, resetSpeechCount } = useVoice();
@@ -156,8 +157,9 @@ const Awareness: React.FC = () => {
     }
   ];
 
+  // Generate unique quiz questions for each lesson
   const generateQuiz = (lesson: HealthLesson): QuizQuestion[] => {
-    return [
+    const baseQuestions = [
       {
         id: `${lesson.id}-q1`,
         question: `What is the main active compound in ${lesson.remedy}?`,
@@ -214,6 +216,8 @@ const Awareness: React.FC = () => {
         explanation: `${lesson.title.split(':')[0]} has a long history of traditional use, as mentioned in ancient texts and traditional medicine systems.`
       }
     ];
+
+    return baseQuestions;
   };
 
   useEffect(() => {
@@ -230,6 +234,7 @@ const Awareness: React.FC = () => {
   const startLesson = (lesson: HealthLesson) => {
     setSelectedLesson(lesson);
     setIsPlayingLesson(true);
+    setShowQuiz(false);
     resetSpeechCount();
     announceToScreenReader(`Starting lesson: ${lesson.title}`);
     
@@ -249,6 +254,7 @@ const Awareness: React.FC = () => {
     setQuizScore(0);
     setShowQuizResults(false);
     setIsPlayingLesson(false);
+    setShowQuiz(true);
     
     resetSpeechCount();
     announceToScreenReader(`Starting quiz for ${selectedLesson.title}. Question 1 of ${quiz.length}`);
@@ -337,6 +343,7 @@ const Awareness: React.FC = () => {
     setQuizScore(0);
     setShowQuizResults(false);
     setIsPlayingLesson(false);
+    setShowQuiz(false);
     resetSpeechCount();
     announceToScreenReader('Returned to lesson selection');
   };
@@ -408,7 +415,7 @@ const Awareness: React.FC = () => {
                     <h2 className="text-2xl font-bold text-gray-900">{selectedLesson.title}</h2>
                     <p className="text-gray-600">{selectedLesson.description}</p>
                     
-                    {!isPlayingLesson && (
+                    {!isPlayingLesson && !showQuiz && (
                       <div className="flex flex-col sm:flex-row gap-3">
                         <Button 
                           variant="success" 
@@ -435,40 +442,42 @@ const Awareness: React.FC = () => {
               {/* Content Section */}
               <div className="space-y-6">
                 {/* Lesson Content */}
-                <Card>
-                  <h3 className="text-xl font-bold text-gray-900 mb-4">About {selectedLesson.remedy}</h3>
-                  <p className="text-gray-700 leading-relaxed mb-4">{selectedLesson.content}</p>
-                  
-                  {/* AI Educational Response */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
-                    <h4 className="font-semibold text-blue-900 mb-2">🤖 AI Educational Insight:</h4>
-                    <p className="text-blue-800 text-sm leading-relaxed">{selectedLesson.aiResponse}</p>
-                  </div>
-                  
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Benefits:</h4>
-                      <ul className="list-disc list-inside space-y-1 text-gray-700">
-                        {selectedLesson.benefits.map((benefit, index) => (
-                          <li key={index}>{benefit}</li>
-                        ))}
-                      </ul>
+                {!showQuiz && (
+                  <Card>
+                    <h3 className="text-xl font-bold text-gray-900 mb-4">About {selectedLesson.remedy}</h3>
+                    <p className="text-gray-700 leading-relaxed mb-4">{selectedLesson.content}</p>
+                    
+                    {/* AI Educational Response */}
+                    <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-4">
+                      <h4 className="font-semibold text-blue-900 mb-2">🤖 AI Educational Insight:</h4>
+                      <p className="text-blue-800 text-sm leading-relaxed">{selectedLesson.aiResponse}</p>
                     </div>
                     
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">How to Prepare:</h4>
-                      <p className="text-gray-700">{selectedLesson.preparation}</p>
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Benefits:</h4>
+                        <ul className="list-disc list-inside space-y-1 text-gray-700">
+                          {selectedLesson.benefits.map((benefit, index) => (
+                            <li key={index}>{benefit}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">How to Prepare:</h4>
+                        <p className="text-gray-700">{selectedLesson.preparation}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-semibold text-gray-900 mb-2">Important Notes:</h4>
+                        <p className="text-gray-700">{selectedLesson.cautions}</p>
+                      </div>
                     </div>
-                    
-                    <div>
-                      <h4 className="font-semibold text-gray-900 mb-2">Important Notes:</h4>
-                      <p className="text-gray-700">{selectedLesson.cautions}</p>
-                    </div>
-                  </div>
-                </Card>
+                  </Card>
+                )}
 
                 {/* Quiz Section */}
-                {currentQuiz.length > 0 && (
+                {showQuiz && currentQuiz.length > 0 && (
                   <Card>
                     {!showQuizResults ? (
                       <div>

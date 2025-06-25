@@ -21,14 +21,15 @@ const AskAI: React.FC = () => {
   const conversationsEndRef = useRef<HTMLDivElement>(null);
 
   const { announceToScreenReader } = useAccessibility();
-  const { speak } = useVoice();
+  const { speak, resetSpeechCount } = useVoice();
 
   useEffect(() => {
     announceToScreenReader('Ask AI page loaded. You can type or speak your health questions here.');
     
     // Only greet once when the page loads
     if (!hasGreeted) {
-      const greeting = "Hello! I'm your AI health companion with expanded medical knowledge. I can help with a wide range of health conditions, symptoms, and wellness questions. Your conversations are securely stored with blockchain technology for your privacy and data ownership. What would you like to know about your health today?";
+      resetSpeechCount();
+      const greeting = "Welcome to Ask AI! I'm your AI health companion with expanded medical knowledge. I can help with a wide range of health conditions, symptoms, and wellness questions. Your conversations are securely stored with blockchain technology for your privacy and data ownership. What would you like to know about your health today?";
       setCurrentResponse(greeting);
       speak(greeting);
       setHasGreeted(true);
@@ -38,7 +39,7 @@ const AskAI: React.FC = () => {
         setCurrentResponse('');
       }, 8000);
     }
-  }, [announceToScreenReader, speak, hasGreeted]);
+  }, [announceToScreenReader, speak, hasGreeted, resetSpeechCount]);
 
   useEffect(() => {
     // Auto-scroll to bottom when new conversations are added
@@ -81,6 +82,7 @@ const AskAI: React.FC = () => {
       
       // Announce and speak the response using ElevenLabs (or fallback)
       announceToScreenReader('AI response received and secured with blockchain technology');
+      resetSpeechCount();
       
       // Generate speech using ElevenLabs
       try {
@@ -168,10 +170,10 @@ const AskAI: React.FC = () => {
               ) : (
                 conversations.map((conv) => (
                   <div key={conv.id} className="space-y-4">
-                    {/* User Question */}
+                    {/* User Question - Fixed text visibility */}
                     <div className="flex justify-end">
                       <Card className="max-w-sm bg-primary-500 text-white">
-                        <p className="font-medium">{conv.question}</p>
+                        <p className="font-medium text-white">{conv.question}</p>
                         <span className="text-xs text-primary-100 mt-2 block">
                           {conv.timestamp.toLocaleTimeString()}
                         </span>

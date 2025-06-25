@@ -15,7 +15,7 @@ export const useVoice = () => {
       setSpeechCount(0);
     }
 
-    // Limit to 2 speech outputs per prompt
+    // Limit to 2 speech outputs per prompt to prevent repetition
     if (speechCount >= 2) {
       console.log('Speech limit reached for this prompt');
       return;

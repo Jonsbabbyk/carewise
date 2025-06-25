@@ -43,6 +43,7 @@ const HealthQuest: React.FC = () => {
   const [selectedCategory, setSelectedCategory] = useState('basics');
   const [storyText, setStoryText] = useState('');
   const [usedQuestions, setUsedQuestions] = useState<Set<string>>(new Set());
+  const [hasSpokenWelcome, setHasSpokenWelcome] = useState(false);
 
   const { announceToScreenReader } = useAccessibility();
   const { speak, resetSpeechCount } = useVoice();
@@ -55,9 +56,9 @@ const HealthQuest: React.FC = () => {
     { id: 'emergency', name: 'Emergency Hero', unlockLevel: 5, color: 'error' }
   ];
 
-  // Enhanced story-based questions with unique questions per category
+  // Enhanced story-based questions with UNIQUE questions per category (5 per category = 25 total)
   const questions: Question[] = [
-    // Health Basics - The Village of Wellness (15 unique questions)
+    // Health Basics - The Village of Wellness (5 unique questions)
     {
       id: 'basics-1',
       question: 'In the Village of Wellness, the wise elder asks: "How much water should a healthy adult drink daily to maintain the magical spring of life?"',
@@ -109,7 +110,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'High atop the village mountain, the Breath Master sits in meditation, teaching visitors how the simple act of breathing can transform their entire being.'
     },
 
-    // Nutrition Quest - The Garden of Vitality (15 unique questions)
+    // Nutrition Quest - The Garden of Vitality (5 unique questions)
     {
       id: 'nutrition-1',
       question: 'In the Garden of Vitality, the Plant Whisperer asks: "Which colorful warriors fight the dark forces of free radicals in your body?"',
@@ -161,7 +162,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'By the garden\'s crystal pond, the Omega Keeper tends to flax plants and explains how certain fats are like liquid gold for your brain and heart.'
     },
 
-    // Herbal Mysteries - The Enchanted Forest (15 unique questions)
+    // Herbal Mysteries - The Enchanted Forest (5 unique questions)
     {
       id: 'natural-1',
       question: 'The Forest Sage reveals an ancient secret: "Which golden root calms the storms of nausea and inflammation in the body\'s kingdom?"',
@@ -213,7 +214,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'In the warrior section of the forest, the Garlic Warrior demonstrates how proper preparation unlocks the full protective power of this natural antibiotic.'
     },
 
-    // Mind Wellness - The Temple of Serenity (15 unique questions)
+    // Mind Wellness - The Temple of Serenity (5 unique questions)
     {
       id: 'mental-1',
       question: 'The Meditation Master teaches: "When anxiety clouds your mind like storm clouds, which breathing technique brings back the sunshine?"',
@@ -265,7 +266,7 @@ const HealthQuest: React.FC = () => {
       storyContext: 'In the temple\'s garden of reflection, the Gratitude Keeper tends to flowers that bloom brighter when appreciated, teaching the transformative power of thankfulness.'
     },
 
-    // Emergency Hero - The Crisis Academy (15 unique questions)
+    // Emergency Hero - The Crisis Academy (5 unique questions)
     {
       id: 'emergency-1',
       question: 'The Emergency Instructor presents a critical scenario: "A fellow adventurer is choking. What is your first heroic action?"',
@@ -339,9 +340,14 @@ const HealthQuest: React.FC = () => {
 
   useEffect(() => {
     announceToScreenReader('Health Quest Quiz Adventure loaded. Answer questions to unlock new health knowledge levels.');
-    resetSpeechCount();
-    speak('Welcome to Health Quest! This is an epic adventure game where you answer health questions to level up and unlock new categories. Each question is part of an engaging story. Are you ready to become a Health Champion?');
-  }, [announceToScreenReader, speak, resetSpeechCount]);
+    
+    // Welcome message - only speak once per session
+    if (!hasSpokenWelcome) {
+      resetSpeechCount();
+      speak('Welcome to Health Quest! This is an epic adventure game where you answer health questions to level up and unlock new categories. Each question is part of an engaging story. Are you ready to become a Health Champion?');
+      setHasSpokenWelcome(true);
+    }
+  }, [announceToScreenReader, speak, resetSpeechCount, hasSpokenWelcome]);
 
   const getRandomQuestion = (category: string): Question => {
     const categoryQuestions = questions.filter(q => 

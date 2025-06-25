@@ -35,6 +35,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMenuOpen }) => {
       '/medicine': 'Medicine Information',
       '/game': 'Sunshine Hero Game',
       '/health-quest': 'Health Quest - Quiz Adventure',
+      '/carechain-vault': 'CareChain Vault - Blockchain Health Identity',
     };
     return titleMap[path] || 'CareWise AI';
   };
@@ -103,7 +104,7 @@ const Header: React.FC<HeaderProps> = ({ onMenuToggle, isMenuOpen }) => {
               <Settings className="h-4 w-4 sm:h-5 sm:w-5" aria-hidden="true" />
             </Link>
 
-            {/* Menu Toggle */}
+            {/* Menu Toggle - Fixed hamburger functionality */}
             <button
               onClick={onMenuToggle}
               className="p-2 sm:p-3 rounded-xl bg-accent-100 border-2 border-accent-500 text-accent-700 hover:bg-accent-200 transition-all duration-200 focus:outline-none focus:ring-4 focus:ring-accent-500 focus:ring-offset-2"

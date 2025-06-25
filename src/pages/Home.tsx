@@ -9,23 +9,22 @@ import TavusAvatar from '../components/UI/TavusAvatar';
 
 const Home: React.FC = () => {
   const { announceToScreenReader } = useAccessibility();
-  const { speak } = useVoice();
+  const { speak, resetSpeechCount } = useVoice();
   const [avatarMessage, setAvatarMessage] = useState('');
   const [showAvatar, setShowAvatar] = useState(true);
   const [hasGreeted, setHasGreeted] = useState(false);
-  const [speechCount, setSpeechCount] = useState(0);
 
   useEffect(() => {
     announceToScreenReader('Welcome to CareWise AI, your accessible health companion');
     
-    // Set initial avatar greeting only once
-    if (!hasGreeted && speechCount < 2) {
-      const greeting = "Hello! I'm your AI health companion. I'm here to help you learn about natural health, answer your questions, and support your wellness journey. How can I assist you today?";
+    // Set initial avatar greeting only once per session
+    if (!hasGreeted) {
+      resetSpeechCount();
+      const greeting = "Welcome to CareWise AI! I'm your AI health companion. I'm here to help you learn about natural health, answer your questions, and support your wellness journey. How can I assist you today?";
       setAvatarMessage(greeting);
       setHasGreeted(true);
-      setSpeechCount(prev => prev + 1);
     }
-  }, [announceToScreenReader, hasGreeted, speechCount]);
+  }, [announceToScreenReader, hasGreeted, resetSpeechCount]);
 
   const handleAvatarComplete = () => {
     // Avatar has finished speaking, clear message to prevent repetition
@@ -70,7 +69,7 @@ const Home: React.FC = () => {
       <section className="relative pt-8 pb-16 px-4 sm:px-6 lg:px-8" aria-labelledby="hero-heading">
         <div className="max-w-4xl mx-auto text-center">
           {/* Tavus AI Avatar */}
-          {showAvatar && avatarMessage && speechCount < 2 && (
+          {showAvatar && avatarMessage && hasGreeted && (
             <div className="mb-8">
               <TavusAvatar 
                 message={avatarMessage}
